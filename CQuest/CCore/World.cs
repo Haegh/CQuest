@@ -21,10 +21,12 @@ namespace CCore {
 		public const int ITEM_ID_SPIDER_FANG = 8;
 		public const int ITEM_ID_SPIDER_SILK = 9;
 		public const int ITEM_ID_ADVENTURER_PASS = 10;
+		public const int ITEM_ID_BSWORD = 11;
 
 		public const int MONSTER_ID_RAT = 1;
 		public const int MONSTER_ID_SNAKE = 2;
 		public const int MONSTER_ID_GIANT_SPIDER = 3;
+		public const int MONSTER_ID_WARRIOR = 4;
 
 		public const int QUEST_ID_CLEAR_ALCHEMIST_GARDEN = 1;
 		public const int QUEST_ID_CLEAR_FARMERS_FIELD = 2;
@@ -38,6 +40,7 @@ namespace CCore {
 		public const int LOCATION_ID_FARM_FIELD = 7;
 		public const int LOCATION_ID_BRIDGE = 8;
 		public const int LOCATION_ID_SPIDER_FIELD = 9;
+		public const int LOCATION_ID_CASTLE= 10;
 
 		static World() {
 			PopulateItems();
@@ -48,12 +51,15 @@ namespace CCore {
 
 		private static void PopulateItems() {
 			Items.Add(new Weapon(ITEM_ID_RUSTY_SWORD, "Rusty sword", "Rusty swords", 0, 5));
+			Items.Add(new Weapon(ITEM_ID_CLUB, "Club", "Clubs", 3, 10));
+			Items.Add(new Weapon(ITEM_ID_BSWORD, "Black sword", "Black swords", 4, 15));
+
+			Items.Add(new HealingPotion(ITEM_ID_HEALING_POTION, "Healing potion", "Healing potions", 5));
+
 			Items.Add(new Item(ITEM_ID_RAT_TAIL, "Rat tail", "Rat tails"));
 			Items.Add(new Item(ITEM_ID_PIECE_OF_FUR, "Piece of fur", "Pieces of fur"));
 			Items.Add(new Item(ITEM_ID_SNAKE_FANG, "Snake fang", "Snake fangs"));
 			Items.Add(new Item(ITEM_ID_SNAKESKIN, "Snakeskin", "Snakeskins"));
-			Items.Add(new Weapon(ITEM_ID_CLUB, "Club", "Clubs", 3, 10));
-			Items.Add(new HealingPotion(ITEM_ID_HEALING_POTION, "Healing potion", "Healing potions", 5));
 			Items.Add(new Item(ITEM_ID_SPIDER_FANG, "Spider fang", "Spider fangs"));
 			Items.Add(new Item(ITEM_ID_SPIDER_SILK, "Spider silk", "Spider silks"));
 			Items.Add(new Item(ITEM_ID_ADVENTURER_PASS, "Adventurer pass", "Adventurer passes"));
@@ -63,18 +69,25 @@ namespace CCore {
 			Monster rat = new Monster(MONSTER_ID_RAT, "Rat", 5, 3, 10, 3, 3);
 			rat.LootTable.Add(new LootItem(ItemByID(ITEM_ID_RAT_TAIL), 75, false));
 			rat.LootTable.Add(new LootItem(ItemByID(ITEM_ID_PIECE_OF_FUR), 75, true));
+			rat.LootTable.Add(new LootItem(ItemByID(ITEM_ID_CLUB), 5, true));
 
 			Monster snake = new Monster(MONSTER_ID_SNAKE, "Snake", 5, 3, 10, 3, 3);
 			snake.LootTable.Add(new LootItem(ItemByID(ITEM_ID_SNAKE_FANG), 75, false));
 			snake.LootTable.Add(new LootItem(ItemByID(ITEM_ID_SNAKESKIN), 75, true));
+			snake.LootTable.Add(new LootItem(ItemByID(ITEM_ID_CLUB), 5, true));
 
 			Monster giantSpider = new Monster(MONSTER_ID_GIANT_SPIDER, "Giant spider", 20, 5, 40, 10, 10);
 			giantSpider.LootTable.Add(new LootItem(ItemByID(ITEM_ID_SPIDER_FANG), 75, true));
 			giantSpider.LootTable.Add(new LootItem(ItemByID(ITEM_ID_SPIDER_SILK), 25, false));
+			
+			Monster warrior = new Monster(MONSTER_ID_WARRIOR, "Warrior", 4, 8, 10, 15, 15);
+			warrior.LootTable.Add(new LootItem(ItemByID(ITEM_ID_HEALING_POTION), 25, false));
+			warrior.LootTable.Add(new LootItem(ItemByID(ITEM_ID_BSWORD), 5, true));
 
 			Monsters.Add(rat);
 			Monsters.Add(snake);
 			Monsters.Add(giantSpider);
+			Monsters.Add(warrior);
 		}
 
 		private static void PopulateQuests() {
@@ -117,6 +130,9 @@ namespace CCore {
 			Location spiderField = new Location(LOCATION_ID_SPIDER_FIELD, "Forest", "You see spider webs covering covering the trees in this forest.");
 			spiderField.MonsterLivingHere = MonsterByID(MONSTER_ID_GIANT_SPIDER);
 
+			Location castle = new Location(LOCATION_ID_CASTLE, "Castle", "The castle of the king. It's so so big.");
+			castle.MonsterLivingHere = MonsterByID(MONSTER_ID_WARRIOR);
+
 			// Link the locations together
 			home.LocationToNorth = townSquare;
 
@@ -137,6 +153,9 @@ namespace CCore {
 
 			guardPost.LocationToEast = bridge;
 			guardPost.LocationToWest = townSquare;
+			guardPost.LocationToNorth = castle;
+
+			castle.LocationToSouth = guardPost;
 
 			bridge.LocationToWest = guardPost;
 			bridge.LocationToEast = spiderField;
@@ -153,6 +172,7 @@ namespace CCore {
 			Locations.Add(farmersField);
 			Locations.Add(bridge);
 			Locations.Add(spiderField);
+			Locations.Add(castle);
 		}
 
 		public static Item ItemByID(int id) {

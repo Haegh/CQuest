@@ -7,25 +7,26 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.IO;
 using CCore;
 
 namespace CQuest {
 	public partial class CQuestUI : Form {
 		private Player _player;
 		private Monster _currentMonster;
+		private const string PLAYER_DATA_FILE_NAME = "PlayerData.xml";
+
 
 		public CQuestUI() {
 			InitializeComponent();
 
-			_player = new Player(10, 10, 20, 0, 1);
-			MoveTo(World.LocationByID(World.LOCATION_ID_HOME));
-			_player.Inventory.Add(new InventoryItem(World.ItemByID(World.ITEM_ID_RUSTY_SWORD), 1));
+			if (File.Exists(PLAYER_DATA_FILE_NAME))
+				_player = Player.CreatePlayerFromXmlString(File.ReadAllText(PLAYER_DATA_FILE_NAME));
+			else
+				_player = Player.CreateDefaultPlayer();
 
-			lblHitPoints.Text = _player.CurrentHitPoints.ToString();
-			lblGold.Text = _player.Gold.ToString();
-			lblExperience.Text = _player.ExperiencePoints.ToString();
-			lblLevel.Text = _player.Level.ToString();
-		}
+			MoveTo(_player.CurrentLocation);
+			UpdatePlayerStats();}
 
 		private void btnNorth_Click(object sender, EventArgs e) {
 			MoveTo(_player.CurrentLocation.LocationToNorth);
@@ -75,10 +76,7 @@ namespace CQuest {
 				}
 
 				// Refresh player's info
-				lblHitPoints.Text = _player.CurrentHitPoints.ToString();
-				lblGold.Text = _player.Gold.ToString();
-				lblExperience.Text = _player.ExperiencePoints.ToString();
-				lblLevel.Text = _player.Level.ToString();
+				UpdatePlayerStats();
 
 				UpdateInventoryListInUI();
 				UpdateWeaponListInUI();
@@ -101,6 +99,8 @@ namespace CQuest {
 					MoveTo(World.LocationByID(World.LOCATION_ID_HOME));
 				}
 			}
+
+			ScrollToBottomOfMessages();
 		}
 
 		private void btnUsePotion_Click(object sender, EventArgs e) {
@@ -129,6 +129,7 @@ namespace CQuest {
 
 			UpdateInventoryListInUI();
 			UpdatePotionListInUI();
+			ScrollToBottomOfMessages();
 		}
 
 		private void MoveTo(Location newLocation) {
@@ -235,6 +236,8 @@ namespace CQuest {
 
 			// Refresh player's potions
 			UpdatePotionListInUI();
+
+			ScrollToBottomOfMessages();
 		}
 
 		private void UpdateInventoryListInUI() {
@@ -306,6 +309,22 @@ namespace CQuest {
 				cboPotions.ValueMember = "ID";
 				cboPotions.SelectedIndex = 0;
 			}
+		}
+
+		private void ScrollToBottomOfMessages() {
+			rtbMessages.SelectionStart = rtbMessages.Text.Length;
+			rtbMessages.ScrollToCaret();
+		}
+
+		private void UpdatePlayerStats() {
+			lblHitPoints.Text = _player.CurrentHitPoints.ToString();
+			lblGold.Text = _player.Gold.ToString();
+			lblExperience.Text = _player.ExperiencePoints.ToString();
+			lblLevel.Text = _player.Level.ToString();
+		}
+
+		private void CQuestUI_FormClosing(object sender, FormClosingEventArgs e) {
+			File.WriteAllText(PLAYER_DATA_FILE_NAME, _player.ToXmlString());
 		}
 	}
 }
