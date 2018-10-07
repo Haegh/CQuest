@@ -21,5 +21,23 @@ namespace CCore {
 			RewardGold = rewardGold;
 			LootTable = new List<LootItem>();
 		}
+
+		public List<InventoryItem> GetLootedItems() {
+			List<InventoryItem> lootedItems = new List<InventoryItem>();
+
+			foreach (LootItem lootItem in LootTable) {
+				if (RandomNumberGenerator.NumberBetween(1, 100) <= lootItem.DropPercentage)
+					lootedItems.Add(new InventoryItem(lootItem.Details, 1));
+			}
+
+			if (lootedItems.Count == 0) {
+				foreach (LootItem lootItem in LootTable) {
+					if (lootItem.IsDefaultItem)
+						lootedItems.Add(new InventoryItem(lootItem.Details, 1));
+				}
+			}
+
+			return lootedItems;
+		}
 	}
 }

@@ -93,6 +93,15 @@ namespace CCore {
 			Inventory.Add(new InventoryItem(itemToAdd, 1));
 		}
 
+		public void RemoveItemFromInventory(Item itemToRemove) {
+			foreach (InventoryItem ii in Inventory) {
+				if (ii.Details.ID == itemToRemove.ID) {
+					ii.Quantity--;
+					return;
+				}
+			}
+		}
+
 		public void MarkQuestCompleted(Quest quest) {
 			foreach (PlayerQuest pq in Quests) {
 				if (pq.Details.ID == quest.ID) {
