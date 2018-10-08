@@ -24,8 +24,12 @@ namespace CQuest {
 			else
 				_player = Player.CreateDefaultPlayer();
 
+			lblHitPoints.DataBindings.Add("Text", _player, "CurrentHitPoints");
+			lblGold.DataBindings.Add("Text", _player, "Gold");
+			lblExperience.DataBindings.Add("Text", _player, "ExperiencePoints");
+			lblLevel.DataBindings.Add("Text", _player, "Level");
 			MoveTo(_player.CurrentLocation);
-			UpdatePlayerStats();}
+		}
 
 		private void btnNorth_Click(object sender, EventArgs e) {
 			MoveTo(_player.CurrentLocation.LocationToNorth);
@@ -74,9 +78,6 @@ namespace CQuest {
 						rtbMessages.Text += "You loot " + inventoryItem.Quantity.ToString() + " " + inventoryItem.Details.NamePlural + Environment.NewLine;
 				}
 
-				// Refresh player's info
-				UpdatePlayerStats();
-
 				UpdateInventoryListInUI();
 				UpdateWeaponListInUI();
 				UpdatePotionListInUI();
@@ -91,7 +92,6 @@ namespace CQuest {
 				rtbMessages.Text += "The " + _currentMonster.Name + " did "+ damageToPlayer.ToString() + " points of damage." + Environment.NewLine;
 
 				_player.CurrentHitPoints -= damageToPlayer;
-				lblHitPoints.Text = _player.CurrentHitPoints.ToString();
 
 				if (_player.CurrentHitPoints <= 0) {
 					rtbMessages.Text += "The " + _currentMonster.Name + " killed you." + Environment.NewLine;
@@ -119,7 +119,6 @@ namespace CQuest {
 			rtbMessages.Text += "The " + _currentMonster.Name + " did " + damageToPlayer.ToString() + " points of damage." + Environment.NewLine;
 
 			_player.CurrentHitPoints -= damageToPlayer;
-			lblHitPoints.Text = _player.CurrentHitPoints.ToString();
 
 			if (_player.CurrentHitPoints <= 0) {
 				rtbMessages.Text += "The " + _currentMonster.Name + " killed you." + Environment.NewLine;
@@ -149,8 +148,6 @@ namespace CQuest {
 			rtbLocation.Text += newLocation.Description + Environment.NewLine;
 
 			_player.CurrentHitPoints = _player.MaximumHitPoints;
-
-			lblHitPoints.Text = _player.CurrentHitPoints.ToString();
 
 			// Check if the location have a quest
 			if (newLocation.QuestAvailableHere != null) {
@@ -320,13 +317,6 @@ namespace CQuest {
 		private void ScrollToBottomOfMessages() {
 			rtbMessages.SelectionStart = rtbMessages.Text.Length;
 			rtbMessages.ScrollToCaret();
-		}
-
-		private void UpdatePlayerStats() {
-			lblHitPoints.Text = _player.CurrentHitPoints.ToString();
-			lblGold.Text = _player.Gold.ToString();
-			lblExperience.Text = _player.ExperiencePoints.ToString();
-			lblLevel.Text = _player.Level.ToString();
 		}
 
 		private void CQuestUI_FormClosing(object sender, FormClosingEventArgs e) {
