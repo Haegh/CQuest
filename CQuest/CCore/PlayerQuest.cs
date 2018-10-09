@@ -3,15 +3,44 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.ComponentModel;
 
 namespace CCore {
 	public class PlayerQuest {
-		public Quest Details { get; set; }
-		public bool IsCompleted { get; set; }
+		public Quest _details;
+		public bool _isCompleted;
+
+		public Quest Details {
+			get { return _details; }
+			set {
+				_details = value;
+				OnPropertyChanged("Details");
+			}
+		}
+
+		public bool IsCompleted {
+			get { return _isCompleted; }
+			set {
+				_isCompleted = value;
+				OnPropertyChanged("IsCompleted");
+				OnPropertyChanged("Name");
+			}
+		}
+
+		public string Name {
+			get { return Details.Name; }
+		}
 
 		public PlayerQuest(Quest details) {
 			Details = details;
 			IsCompleted = false;
+		}
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		protected void OnPropertyChanged(string name) {
+			if (PropertyChanged != null)
+				PropertyChanged(this, new PropertyChangedEventArgs(name));
 		}
 	}
 }

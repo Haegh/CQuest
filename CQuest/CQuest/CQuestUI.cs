@@ -28,6 +28,35 @@ namespace CQuest {
 			lblGold.DataBindings.Add("Text", _player, "Gold");
 			lblExperience.DataBindings.Add("Text", _player, "ExperiencePoints");
 			lblLevel.DataBindings.Add("Text", _player, "Level");
+
+			// Inventory binding
+			dgvInventory.RowHeadersVisible = false;
+			dgvInventory.AutoGenerateColumns = false;
+			dgvInventory.DataSource = _player.Inventory;
+			dgvInventory.Columns.Add(new DataGridViewTextBoxColumn {
+				HeaderText = "Name",
+				Width = 197,
+				DataPropertyName = "Description"
+			});
+			dgvInventory.Columns.Add(new DataGridViewTextBoxColumn {
+				HeaderText = "Quantity",
+				DataPropertyName = "Quantity"
+			});
+
+			// Quest binding
+			dgvQuests.RowHeadersVisible = false;
+			dgvQuests.AutoGenerateColumns = false;
+			dgvQuests.DataSource = _player.Quests;
+			dgvQuests.Columns.Add(new DataGridViewTextBoxColumn {
+				HeaderText = "Name",
+				Width = 197,
+				DataPropertyName = "Description"
+			});
+			dgvQuests.Columns.Add(new DataGridViewTextBoxColumn {
+				HeaderText = "Done?",
+				DataPropertyName = "IsCompleted"
+			});			
+
 			MoveTo(_player.CurrentLocation);
 		}
 
@@ -77,8 +106,7 @@ namespace CQuest {
 					else
 						rtbMessages.Text += "You loot " + inventoryItem.Quantity.ToString() + " " + inventoryItem.Details.NamePlural + Environment.NewLine;
 				}
-
-				UpdateInventoryListInUI();
+				
 				UpdateWeaponListInUI();
 				UpdatePotionListInUI();
 
@@ -124,8 +152,7 @@ namespace CQuest {
 				rtbMessages.Text += "The " + _currentMonster.Name + " killed you." + Environment.NewLine;
 				MoveTo(World.LocationByID(World.LOCATION_ID_HOME));
 			}
-
-			UpdateInventoryListInUI();
+			
 			UpdatePotionListInUI();
 			ScrollToBottomOfMessages();
 		}
@@ -221,12 +248,6 @@ namespace CQuest {
 				btnUsePotion.Visible = false;
 			}
 
-			// Refresh player's inventory
-			UpdateInventoryListInUI();
-
-			// Refresh player's quest
-			UpdateQuestListInUI();
-
 			// Refresh player's weapons
 			UpdateWeaponListInUI();
 
@@ -234,35 +255,6 @@ namespace CQuest {
 			UpdatePotionListInUI();
 
 			ScrollToBottomOfMessages();
-		}
-
-		private void UpdateInventoryListInUI() {
-			dgvInventory.RowHeadersVisible = false;
-			dgvInventory.ColumnCount = 2;
-			dgvInventory.Columns[0].Name = "Name";
-			dgvInventory.Columns[0].Width = 197;
-			dgvInventory.Columns[1].Name = "Quantity";
-
-			dgvInventory.Rows.Clear();
-
-			foreach (InventoryItem inventoryItem in _player.Inventory) {
-				if (inventoryItem.Quantity > 0)
-					dgvInventory.Rows.Add(new[] { inventoryItem.Details.Name, inventoryItem.Quantity.ToString() });
-			}
-		}
-
-		private void UpdateQuestListInUI() {
-			dgvQuests.RowHeadersVisible = false;
-			dgvQuests.ColumnCount = 2;
-			dgvQuests.Columns[0].Name = "Name";
-			dgvQuests.Columns[0].Width = 197;
-			dgvQuests.Columns[1].Name = "Quantity";
-
-			dgvQuests.Rows.Clear();
-
-			foreach (PlayerQuest playerQuest in _player.Quests) {
-				dgvQuests.Rows.Add(new[] { playerQuest.Details.Name, playerQuest.IsCompleted.ToString() });
-			}
 		}
 
 		private void UpdateWeaponListInUI() {
