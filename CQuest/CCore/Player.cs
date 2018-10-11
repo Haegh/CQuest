@@ -12,9 +12,11 @@ namespace CCore {
 		public BindingList<PlayerQuest> Quests { get; set; }
 		public Location CurrentLocation { get; set; }
 		public Weapon CurrentWeapon { get; set; }
+
 		public int Level {
 			get { return ((ExperiencePoints / 100) + 1); }
 		}
+
 		private int _gold;
 		private int _experiencePoints;
 
@@ -35,11 +37,47 @@ namespace CCore {
 			}
 		}
 
+		public List<Weapon> Weapons {
+			get { return Inventory.Where(x => x.Details is Weapon).Select(x => x.Details as Weapon).ToList(); }
+		}
+						
+		public List<HealingPotion> Potions {
+			get { return Inventory.Where(x => x.Details is HealingPotion).Select(x => x.Details as HealingPotion).ToList(); }
+		}
+
+
+		// Constructor
 		private Player(int currentHitPoints, int maximumHitPoints, int gold, int experiencePoints) : base(maximumHitPoints, currentHitPoints) {
 			Gold = gold;
 			ExperiencePoints = experiencePoints;
 			Inventory = new BindingList<InventoryItem>();
 			Quests = new BindingList<PlayerQuest>();
+		}
+
+		// Function & procedure
+		public void AddExperiencePoints(int experiencePointsToAdd) {
+			ExperiencePoints += experiencePointsToAdd;
+			MaximumHitPoints = (Level * 10);
+		}
+
+		public void AddItemToInventory(Item itemToAdd, int quantity = 1) {
+			InventoryItem item = Inventory.SingleOrDefault(ii => ii.Details.ID == itemToAdd.ID);
+
+			if (item == null)
+				Inventory.Add(new InventoryItem(itemToAdd, quantity));
+			else
+				item.Quantity += quantity;
+
+			RaiseInventoryChangedEvent(itemToAdd);
+		}
+
+		public bool CompletedThisQuest(Quest quest) {
+			foreach (PlayerQuest playerQuest in Quests) {
+				if (playerQuest.Details.ID == quest.ID)
+					return playerQuest.IsCompleted;
+			}
+
+			return false;
 		}
 
 		public static Player CreateDefaultPlayer() {
@@ -48,11 +86,6 @@ namespace CCore {
 			player.CurrentLocation = World.LocationByID(World.LOCATION_ID_HOME);
 
 			return player;
-		}
-
-		public void AddExperiencePoints(int experiencePointsToAdd) {
-			ExperiencePoints += experiencePointsToAdd;
-			MaximumHitPoints = (Level * 10);
 		}
 
 		public static Player CreatePlayerFromXmlString(string xmlPlayerData) {
@@ -101,6 +134,15 @@ namespace CCore {
 			}
 		}
 
+		public bool HasAllQuestCompletionItems(Quest quest) {
+			foreach (QuestCompletionItem qci in quest.QuestCompletionItems) {
+				if (!Inventory.Any(ii => ii.Details.ID == qci.Details.ID && ii.Quantity >= qci.Quantity))
+					return false;
+			}
+
+			return true;
+		}
+
 		public bool HasRequiredItemToEnterThisLocation(Location location) {
 			if (location.ItemRequiredToEnter == null)
 				return true;
@@ -112,22 +154,37 @@ namespace CCore {
 			return Quests.Any(pq => pq.Details.ID == quest.ID);
 		}
 
-		public bool CompletedThisQuest(Quest quest) {
-			foreach (PlayerQuest playerQuest in Quests) {
-				if (playerQuest.Details.ID == quest.ID)
-					return playerQuest.IsCompleted;
-			}
+		public void MarkQuestCompleted(Quest quest) {
+			PlayerQuest playerQuest = Quests.SingleOrDefault(pq => pq.Details.ID == quest.ID);
 
-			return false;
+			if (playerQuest != null)
+				playerQuest.IsCompleted = true;
 		}
 
-		public bool HasAllQuestCompletionItems(Quest quest) {
-			foreach (QuestCompletionItem qci in quest.QuestCompletionItems) {
-				if (!Inventory.Any(ii => ii.Details.ID == qci.Details.ID && ii.Quantity >= qci.Quantity))
-					return false;
-			}
+		public void RaiseInventoryChangedEvent(Item item) {
+			if (item is Weapon)
+				OnPropertyChanged("Weapons");
 
-			return true;
+			if (item is HealingPotion)
+				OnPropertyChanged("Potions");
+		}
+
+		public void RemoveItemFromInventory(Item itemToRemove, int quantity = 1) {
+			InventoryItem item = Inventory.SingleOrDefault(ii => ii.Details.ID == itemToRemove.ID);
+
+			if (item == null) {
+
+			} else {
+				item.Quantity -= quantity;
+
+				if (item.Quantity < 0)
+					item.Quantity = 0;
+
+				if (item.Quantity == 0)
+					Inventory.Remove(item);
+
+				RaiseInventoryChangedEvent(itemToRemove);
+			}
 		}
 
 		public void RemoveQuestCompletionItems(Quest quest) {
@@ -135,31 +192,8 @@ namespace CCore {
 				InventoryItem item = Inventory.SingleOrDefault(ii => ii.Details.ID == qci.Details.ID);
 				
 				if (item != null )
-					item.Quantity -= qci.Quantity;
+					RemoveItemFromInventory(item.Details, qci.Quantity);
 			}
-		}
-
-		public void AddItemToInventory(Item itemToAdd) {
-			InventoryItem item = Inventory.SingleOrDefault(ii => ii.Details.ID == itemToAdd.ID);
-
-			if (item == null)
-				Inventory.Add(new InventoryItem(itemToAdd, 1));
-			else
-				item.Quantity++;
-		}
-
-		public void RemoveItemFromInventory(Item itemToRemove) {
-			InventoryItem item = Inventory.SingleOrDefault(ii => ii.Details.ID == itemToRemove.ID);
-
-			if (item != null)
-				item.Quantity --;
-		}
-
-		public void MarkQuestCompleted(Quest quest) {
-			PlayerQuest playerQuest = Quests.SingleOrDefault(pq => pq.Details.ID == quest.ID);
-
-			if (playerQuest != null)
-				playerQuest.IsCompleted = true;
 		}
 
 		public string ToXmlString() {

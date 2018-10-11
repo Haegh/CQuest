@@ -16,6 +16,8 @@ namespace CQuest {
 		private Monster _currentMonster;
 		private const string PLAYER_DATA_FILE_NAME = "PlayerData.xml";
 		
+
+		// Constructor
 		public CQuestUI() {
 			InitializeComponent();
 
@@ -50,16 +52,35 @@ namespace CQuest {
 			dgvQuests.Columns.Add(new DataGridViewTextBoxColumn {
 				HeaderText = "Name",
 				Width = 197,
-				DataPropertyName = "Description"
+				DataPropertyName = "Name"
 			});
 			dgvQuests.Columns.Add(new DataGridViewTextBoxColumn {
 				HeaderText = "Done?",
 				DataPropertyName = "IsCompleted"
-			});			
+			});
+
+			// Weapons binding
+			cboWeapons.DataSource = _player.Weapons;
+			cboWeapons.DisplayMember = "Name";
+			cboWeapons.ValueMember = "Id";
+
+			if (_player.CurrentWeapon != null)
+				cboWeapons.SelectedItem = _player.CurrentWeapon;
+
+			cboWeapons.SelectedIndexChanged += cboWeapons_SelectedIndexChanged;
+
+			// Potions binding
+			cboPotions.DataSource = _player.Potions;
+			cboPotions.DisplayMember = "Name";
+			cboPotions.ValueMember = "Id";
+
+			_player.PropertyChanged += PlayerOnPropertyChanged;
 
 			MoveTo(_player.CurrentLocation);
 		}
 
+
+		// Function & procedure
 		private void btnNorth_Click(object sender, EventArgs e) {
 			MoveTo(_player.CurrentLocation.LocationToNorth);
 		}
@@ -106,9 +127,6 @@ namespace CQuest {
 					else
 						rtbMessages.Text += "You loot " + inventoryItem.Quantity.ToString() + " " + inventoryItem.Details.NamePlural + Environment.NewLine;
 				}
-				
-				UpdateWeaponListInUI();
-				UpdatePotionListInUI();
 
 				rtbMessages.Text += Environment.NewLine;
 
@@ -152,8 +170,7 @@ namespace CQuest {
 				rtbMessages.Text += "The " + _currentMonster.Name + " killed you." + Environment.NewLine;
 				MoveTo(World.LocationByID(World.LOCATION_ID_HOME));
 			}
-			
-			UpdatePotionListInUI();
+
 			ScrollToBottomOfMessages();
 		}
 
@@ -235,10 +252,10 @@ namespace CQuest {
 				foreach (LootItem lootItem in standardMonster.LootTable)
 					_currentMonster.LootTable.Add(lootItem);
 
-				cboWeapons.Visible = true;
-				cboPotions.Visible = true;
-				btnUseWeapon.Visible = true;
-				btnUsePotion.Visible = true;
+				cboWeapons.Visible = _player.Weapons.Any();
+				cboPotions.Visible = _player.Potions.Any();
+				btnUseWeapon.Visible = _player.Weapons.Any();
+				btnUsePotion.Visible = _player.Potions.Any();
 			} else {
 				_currentMonster = null;
 
@@ -248,62 +265,7 @@ namespace CQuest {
 				btnUsePotion.Visible = false;
 			}
 
-			// Refresh player's weapons
-			UpdateWeaponListInUI();
-
-			// Refresh player's potions
-			UpdatePotionListInUI();
-
 			ScrollToBottomOfMessages();
-		}
-
-		private void UpdateWeaponListInUI() {
-			List<Weapon> weapons = new List<Weapon>();
-
-			foreach (InventoryItem inventoryItem in _player.Inventory) {
-				if (inventoryItem.Details is Weapon) {
-					if (inventoryItem.Quantity > 0)
-						weapons.Add((Weapon)inventoryItem.Details);
-				}
-			}
-
-			if (weapons.Count == 0) {
-				cboWeapons.Visible = false;
-				btnUseWeapon.Visible = false;
-			} else {
-				cboWeapons.SelectedIndexChanged -= cboWeapons_SelectedIndexChanged;
-				cboWeapons.DataSource = weapons;
-				cboWeapons.SelectedIndexChanged += cboWeapons_SelectedIndexChanged;
-				cboWeapons.DisplayMember = "Name";
-				cboWeapons.ValueMember = "ID";
-				cboWeapons.SelectedIndex = 0;
-
-				if (_player.CurrentWeapon != null)
-					cboWeapons.SelectedItem = _player.CurrentWeapon;
-				else
-					cboWeapons.SelectedItem = 0;
-			}
-		}
-
-		private void UpdatePotionListInUI() {
-			List<HealingPotion> healingPotion = new List<HealingPotion>();
-
-			foreach (InventoryItem inventoryItem in _player.Inventory) {
-				if (inventoryItem.Details is HealingPotion) {
-					if (inventoryItem.Quantity > 0)
-						healingPotion.Add((HealingPotion)inventoryItem.Details);
-				}
-			}
-
-			if (healingPotion.Count == 0) {
-				cboPotions.Visible = false;
-				btnUsePotion.Visible = false;
-			} else {
-				cboPotions.DataSource = healingPotion;
-				cboPotions.DisplayMember = "Name";
-				cboPotions.ValueMember = "ID";
-				cboPotions.SelectedIndex = 0;
-			}
 		}
 
 		private void ScrollToBottomOfMessages() {
@@ -317,6 +279,26 @@ namespace CQuest {
 
 		private void cboWeapons_SelectedIndexChanged(object sender, EventArgs e) {
 			_player.CurrentWeapon = (Weapon)cboWeapons.SelectedItem;
+		}
+
+		private void PlayerOnPropertyChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs) {
+			if (propertyChangedEventArgs.PropertyName == "Weapons") {
+				cboWeapons.DataSource = _player.Weapons;
+
+				if (!_player.Weapons.Any()) {
+					cboWeapons.Visible = false;
+					btnUseWeapon.Visible = false;
+				}
+			}
+
+			if (propertyChangedEventArgs.PropertyName == "Potions") {
+				cboPotions.DataSource = _player.Potions;
+
+				if (!_player.Potions.Any()) {
+					cboPotions.Visible = false;
+					btnUsePotion.Visible = false;
+				}
+			}
 		}
 	}
 }
